@@ -29,26 +29,26 @@ El programa es capaz de entender el archivo aunque tenga el formato mínimo, per
 
 ### Formato estricto
 
-fecha cantidad_fichas: cantidad_euros€
-nombre_jugador [+-]cantidad_fichas = [+-]cantidad_euros
+fecha cantidad_fichas: cantidad_euros€\
+nombre_jugador [+-]cantidad_fichas = [+-]cantidad_euros\
 
 -- Ejemplo --
 
-20/10/23 90: 2€
-federico +98 = +2.18€
-anastasia -78 = -1.7€
-emmanuel -20 = -0.44€
+20/10/23 90: 2€\
+federico +98 = +2.18€\
+anastasia -78 = -1.7€\
+emmanuel -20 = -0.44€\
 
 ### Formato mínimo
 
-fecha cantidad_fichas: cantidad_euros€
+fecha cantidad_fichas: cantidad_euros€\
 nombre_jugador [-]cantidad_fichas
 
 -- Ejemplo --
 
-20/10/23 90: 2€
-federico +98
-anastasia -78
+20/10/23 90: 2€\
+federico +98\
+anastasia -78\
 emmanuel -20
 
 ## Autor
