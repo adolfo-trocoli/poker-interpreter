@@ -7,21 +7,21 @@ from matplotlib import pyplot as plt
 
 # Argumentos
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument('-t', '--total', help='total de beneficios de todos los jugadores', action = 'store_true')
-parser.add_argument('-p', '--pumas', help='solo mostrar pumas, debe ser usado en combinación con -t', action='store_true')
-parser.add_argument('-j', '--jugador', help='total de beneficios para el jugador indicado')
-parser.add_argument('-g', '--grafico', help='grafico de historia de beneficios del jugador indicado')
-parser.add_argument('-gt', '--graficototal', help='grafico de historia acumulada de beneficios del jugador indicado')
-parser.add_argument('-cm', '--comprobar', help='muestra el si hay diferencia entre lo ganado por los jugadores y el total jugado', action = 'store_true')
-parser.add_argument('-o', '--output', help='output to given file')
-parser.add_argument('-l', '--list', help='list games', action='store_true')
-parser.add_argument('-lg', '--game', help='show one game by id')
-parser.add_argument('-r', '--resolve', help='resolver tricount')
-parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
-
-args = parser.parse_args()
+def parse_arguments():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('file', help='file name')
+	parser.add_argument('-t', '--total', help='total de beneficios de todos los jugadores', action = 'store_true')
+	parser.add_argument('-p', '--pumas', help='solo mostrar pumas, debe ser usado en combinación con -t', action='store_true')
+	parser.add_argument('-j', '--jugador', help='total de beneficios para el jugador indicado')
+	parser.add_argument('-g', '--grafico', help='grafico de historia de beneficios del jugador indicado')
+	parser.add_argument('-gt', '--graficototal', help='grafico de historia acumulada de beneficios del jugador indicado')
+	parser.add_argument('-cm', '--comprobar', help='muestra el si hay diferencia entre lo ganado por los jugadores y el total jugado', action = 'store_true')
+	parser.add_argument('-o', '--output', help='output to given file')
+	parser.add_argument('-l', '--list', help='list games', action='store_true')
+	parser.add_argument('-lg', '--game', help='show one game by id')
+	parser.add_argument('-r', '--resolve', help='resolver tricount')
+	parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
+	return parser.parse_args()
 
 # Definicion de objetos
 
@@ -308,15 +308,17 @@ games = []
 
 lista_pumas = ['adolfo', 'marco', 'nico', 'mario']
 
+args = parse_arguments()
+
 # Lectura del archivo
 
 if args.output:
 	output_file = open(args.output, 'w')
 
 if args.check_format:
-	comprobar_formato.format_checker()
+	comprobar_formato.format_checker(args.file)
 
-with open('nota.txt', 'r') as file:
+with open(args.file, 'r') as file:
 	for line in file:
 		check_line(line.strip())
 	add_last_game()

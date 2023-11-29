@@ -39,8 +39,8 @@ def check_format(line, line_number):
 	else:
 		print('NO MATCH: ' + str(line_number))
 
-def format_checker():
-	with open('nota.txt', 'r') as file:
+def format_checker(file):
+	with open(file, 'r') as file:
 		for line_number, line in enumerate(file, 1):
 			if line.strip() == '':
 				continue
