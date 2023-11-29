@@ -30,14 +30,14 @@ El programa es capaz de entender el archivo aunque tenga el formato mínimo, per
 ### Formato estricto
 
 fecha cantidad_fichas: cantidad_euros€\
-nombre_jugador [+-]cantidad_fichas = [+-]cantidad_euros
+nombre_jugador [+-]cantidad_fichas = [+-]cantidad_euros\
 
 -- Ejemplo --
 
 20/10/23 90: 2€\
 federico +98 = +2.18€\
 anastasia -78 = -1.7€\
-emmanuel -20 = -0.44€
+emmanuel -20 = -0.44€\
 
 ### Formato mínimo
 
@@ -50,6 +50,11 @@ nombre_jugador [-]cantidad_fichas
 federico +98\
 anastasia -78\
 emmanuel -20
+
+## Instalación
+
+Descargar el script e instalar, no tiene mucho.
+Si quieres la opción de comprobar formato, tienes que descargar el sript de comprobar formato que va aparte y meterlo en la misma dirección. Si clonas el repositorio no hay problema.
 
 ## Autor
 
