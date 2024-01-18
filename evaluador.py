@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 def parse_arguments():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('file', help='file name')
+	parser.add_argument('-f', '--file', help='file name', default='nota.txt')
 	parser.add_argument('-t', '--total', help='total de beneficios de todos los jugadores', action = 'store_true')
 	parser.add_argument('-p', '--pumas', help='solo mostrar pumas, debe ser usado en combinación con -t', action='store_true')
 	parser.add_argument('-j', '--jugador', help='total de beneficios para el jugador indicado')
@@ -179,6 +179,7 @@ def comprobar_partida(game):
 
 def resolve():
 	game = games[int(args.resolve) - 1]
+	game_date = game.date
 	winner_remain = 0
 	looser_id = 0
 	result_list = []
@@ -202,7 +203,7 @@ def resolve():
 			if rest == 0:
 				looser_id += 1
 		result_list.append((None, None))
-	return result_list
+	return (result_list, game_date)
 
 # Metodos de vista
 
@@ -240,7 +241,7 @@ def show_player_total_benefit_history():
 def show_comprobar():
 	for (result, date, error) in comprobar():
 		if error:
-			output(color_text('red', f'{date}: {result:.2f}\n'))
+			output(color_text('red', f'{date_string(date)}: {result:.2f}\n'))
 		else:
 			output(f'{date}: {result:.2f}\n')
 
@@ -254,17 +255,19 @@ def show_game():
 	game = games[int(args.game) - 1]
 	output('------------------------\n')
 	output(f'-- Partida {int(args.game)} --\n')
-	output(f'{date_string(game.date)} {str(int(game.cuantity))}: {str(int(game.buyin))}€\n')
+	output(f'{date_string(game.date)} {str(int(game.cuantity))}: {str(float(game.buyin))}€\n')
 	output('------------------------\n')
 	for player in game.players:
 		output(f'{player.name} {number_string(player.cuantity_gained)} = {number_string(player.money_gained)}€\n')
 	output('------------------------\n')
 
 def show_resolve():
+	(result_list, date) = resolve()
 	output('------------------------\n')
-	output(f'-- Pagos Tricount --\n')
+	output('-- Pagos Tricount --\n')
+	output(f'     {date_string(date)}\n')
 	output('------------------------\n')
-	for (name, value) in resolve():
+	for (name, value) in result_list:
 		if name is not None:
 			output(f'{name} {number_string(value)}\n')
 		else:
@@ -291,7 +294,7 @@ def output(message):
 
 # Definicion de expresiones regulares
 
-header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{2})\s+(\d{2,3})\s*:\s+(\d{1,2})\s*€?\s*')
+header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
 player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+(.\d+)?)\s*€?\s*')
 
 incomplete_player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=?\s*[+-]?\s*$')
