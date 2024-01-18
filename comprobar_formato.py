@@ -3,7 +3,7 @@ import re
 loose_header_regex = re.compile(r'^\d.*')
 loose_player_regex = re.compile(r'^[a-zA-Z].*')
 
-header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{2})\s+(\d{2,3})\s*:\s+(\d{1,2})\s*€?\s*')
+header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(-torneo-)?\s*(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
 player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+(.\d+)?)\s*€?\s*')
 
 strict_header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{2})\s(\d{2,3}):\s(\d{1,2})€')

@@ -25,7 +25,7 @@ def parse_arguments():
 
 # Definicion de objetos
 
-class Player:
+class player:
 	def __init__(self, name, cuantity, money = None):
 		self.name = name
 		self.cuantity_gained = cuantity
@@ -92,8 +92,8 @@ def add_last_game():
 def create_header(header_result):
 	groups = header_result.groups()
 	date = daydate(int('20' + groups[2]),int(groups[1]),int(groups[0])) # 20 is to create 2023, 2024 (groups[2] is the year)
-	cuantity = float(groups[3])
-	buyin = float(groups[4])
+	cuantity = float(groups[4])
+	buyin = float(groups[5])
 	return header(date, cuantity, buyin)
 
 def create_player(player_result):
@@ -101,13 +101,13 @@ def create_player(player_result):
 	name = groups[0].lower()
 	cuantity = float(groups[1])
 	money = float(groups[2])
-	return Player(name, cuantity, money)
+	return player(name, cuantity, money)
 
 def create_incomplete_player(incomplete_player_result):
 	groups = incomplete_player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
-	return Player(name, cuantity)
+	return player(name, cuantity)
 
 def create_game(header, players):
 	return game(header, players)
@@ -206,10 +206,10 @@ def count_resolve(player_list):
 def resolve():
 	game_list = []
 	for id in args.resolve:
-		game_list.append(games[int(id) - 1])
+		game_list.append(games[int(id) - 1]) # lista de partidas pedidas como argumento
 	players_total = total_benefit(game_list) # dict con nombre y cantidad ganada en dinero
-	player_list = [Player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
-	result_list = count_resolve(player_list)
+	player_list = [player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
+	result_list = count_resolve(player_list) # lista de tuplas (nombre, valor) con lo que ha ganado o perdido separado por tuplas (None, None)
 	return result_list
 
 # Metodos de vista
@@ -300,7 +300,7 @@ def output(message):
 
 # Definicion de expresiones regulares
 
-header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
+header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(-torneo-)?\s*(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
 player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+(.\d+)?)\s*€?\s*')
 
 incomplete_player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=?\s*[+-]?\s*$')
