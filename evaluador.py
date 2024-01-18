@@ -19,8 +19,7 @@ def parse_arguments():
 	parser.add_argument('-o', '--output', help='output to given file')
 	parser.add_argument('-l', '--list', help='list games', action='store_true')
 	parser.add_argument('-lg', '--game', help='show one game by id')
-	parser.add_argument('-r', '--resolve', help='resolver tricount')
-	parser.add_argument('-mr', '--multiple_resolve', nargs='+', help='resolver tricount de varias partidas')
+	parser.add_argument('-r', '--resolve', nargs='+', help='resolver tricount')
 	parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
 	return parser.parse_args()
 
@@ -205,14 +204,8 @@ def count_resolve(player_list):
 	return result_list
 
 def resolve():
-	game = games[int(args.resolve) - 1]
-	game_date = game.date
-	result_list = count_resolve(game.players)
-	return (result_list, game_date)
-
-def multiple_resolve():
 	game_list = []
-	for id in args.multiple_resolve:
+	for id in args.resolve:
 		game_list.append(games[int(id) - 1])
 	players_total = total_benefit(game_list) # dict con nombre y cantidad ganada en dinero
 	player_list = [Player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
@@ -276,19 +269,7 @@ def show_game():
 	output('------------------------\n')
 
 def show_resolve():
-	(result_list, date) = resolve()
-	output('------------------------\n')
-	output('-- Pagos Tricount --\n')
-	output(f'     {date_string(date)}\n')
-	output('------------------------\n')
-	for (name, value) in result_list:
-		if name is not None:
-			output(f'{name} {number_string(value)}\n')
-		else:
-			output('------------------------\n')
-
-def show_multiple_resolve():
-	result_list = multiple_resolve()
+	result_list = resolve()
 	output('------------------------\n')
 	output('-- Pagos Tricount --\n')
 	output('------------------------\n')
@@ -371,8 +352,6 @@ if args.game:
 	show_game()
 if args.resolve:
 	show_resolve()
-if args.multiple_resolve:
-	show_multiple_resolve()
 
 if args.output:
 	output_file.close()
