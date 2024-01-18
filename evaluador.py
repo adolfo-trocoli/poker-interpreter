@@ -20,12 +20,13 @@ def parse_arguments():
 	parser.add_argument('-l', '--list', help='list games', action='store_true')
 	parser.add_argument('-lg', '--game', help='show one game by id')
 	parser.add_argument('-r', '--resolve', help='resolver tricount')
+	parser.add_argument('-mr', '--multiple_resolve', nargs='+', help='resolver tricount de varias partidas')
 	parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
 	return parser.parse_args()
 
 # Definicion de objetos
 
-class player:
+class Player:
 	def __init__(self, name, cuantity, money = None):
 		self.name = name
 		self.cuantity_gained = cuantity
@@ -91,7 +92,7 @@ def add_last_game():
 	
 def create_header(header_result):
 	groups = header_result.groups()
-	date = daydate(int('20' + groups[2]),int(groups[1]),int(groups[0]))
+	date = daydate(int('20' + groups[2]),int(groups[1]),int(groups[0])) # 20 is to create 2023, 2024 (groups[2] is the year)
 	cuantity = float(groups[3])
 	buyin = float(groups[4])
 	return header(date, cuantity, buyin)
@@ -101,13 +102,13 @@ def create_player(player_result):
 	name = groups[0].lower()
 	cuantity = float(groups[1])
 	money = float(groups[2])
-	return player(name, cuantity, money)
+	return Player(name, cuantity, money)
 
 def create_incomplete_player(incomplete_player_result):
 	groups = incomplete_player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
-	return player(name, cuantity)
+	return Player(name, cuantity)
 
 def create_game(header, players):
 	return game(header, players)
@@ -123,9 +124,9 @@ def complete_game(game):
 
 # Metodos de aplicacion
 
-def total_benefit():
+def total_benefit(game_list):
 	players_total = dict()
-	for game in games:
+	for game in game_list:
 		for player in game.players:
 			if player.name in players_total:
 				players_total[player.name] += player.money_gained
@@ -177,15 +178,13 @@ def comprobar_partida(game):
 		error = True
 	return (total, game.date, error)
 
-def resolve():
-	game = games[int(args.resolve) - 1]
-	game_date = game.date
+def count_resolve(player_list):
 	winner_remain = 0
 	looser_id = 0
 	result_list = []
 	rest = 0
-	winners = [(player.name, player.money_gained) for player in game.players if player.money_gained > 0]
-	loosers = [(player.name, -1 * player.money_gained) for player in game.players if player.money_gained < 0]
+	winners = [(player.name, player.money_gained) for player in player_list if player.money_gained > 0]
+	loosers = [(player.name, -1 * player.money_gained) for player in player_list if player.money_gained < 0]
 	for winner in winners:
 		result_list.append(winner)
 		winner_remain = winner[1]
@@ -203,7 +202,22 @@ def resolve():
 			if rest == 0:
 				looser_id += 1
 		result_list.append((None, None))
+	return result_list
+
+def resolve():
+	game = games[int(args.resolve) - 1]
+	game_date = game.date
+	result_list = count_resolve(game.players)
 	return (result_list, game_date)
+
+def multiple_resolve():
+	game_list = []
+	for id in args.multiple_resolve:
+		game_list.append(games[int(id) - 1])
+	players_total = total_benefit(game_list) # dict con nombre y cantidad ganada en dinero
+	player_list = [Player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
+	result_list = count_resolve(player_list)
+	return result_list
 
 # Metodos de vista
 
@@ -211,7 +225,7 @@ def show_total_benefit():
 	output('------------------------\n')
 	output('-- Beneficio total --\n')
 	output('------------------------\n')
-	for k,v in sorted(total_benefit().items(), key=lambda item: item[1], reverse=True):
+	for k,v in sorted(total_benefit(games).items(), key=lambda item: item[1], reverse=True):
 		if args.pumas:
 			if k in lista_pumas:
 				output(f'  {k}: {number_string(v)}\n')
@@ -266,6 +280,17 @@ def show_resolve():
 	output('------------------------\n')
 	output('-- Pagos Tricount --\n')
 	output(f'     {date_string(date)}\n')
+	output('------------------------\n')
+	for (name, value) in result_list:
+		if name is not None:
+			output(f'{name} {number_string(value)}\n')
+		else:
+			output('------------------------\n')
+
+def show_multiple_resolve():
+	result_list = multiple_resolve()
+	output('------------------------\n')
+	output('-- Pagos Tricount --\n')
 	output('------------------------\n')
 	for (name, value) in result_list:
 		if name is not None:
@@ -346,6 +371,8 @@ if args.game:
 	show_game()
 if args.resolve:
 	show_resolve()
+if args.multiple_resolve:
+	show_multiple_resolve()
 
 if args.output:
 	output_file.close()
