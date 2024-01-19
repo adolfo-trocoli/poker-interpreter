@@ -1,0 +1,3 @@
+- Check-format está roto.
+- Añadir soporte para torneos.
+- Añadir puntuaciones normalizadas.

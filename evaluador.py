@@ -218,7 +218,6 @@ def igualar():
 	new_players = []
 	total_game_benefit = 0
 	game = games[int(args.igualar) - 1]
-	print((game.players)[0].money_gained)
 	benefit_dict = total_benefit([game]) # dict con jugadores y ganancias
 	result = comprobar_partida(game)[0] # diferencia de dinero
 	if result > 0:
@@ -261,7 +260,7 @@ def show_jugador_benefit():
 	output('------------------------\n')
 	output(f'-- Beneficio de {args.jugador} --\n')
 	output('------------------------\n')
-	output(f'  {total_benefit()[args.jugador]:.2f}\n')
+	output(f'  {total_benefit(games)[args.jugador]:.2f}\n')
 	output('------------------------\n')
 
 def show_player_benefit_history():
@@ -277,11 +276,13 @@ def show_player_total_benefit_history():
 	plt.show()
 
 def show_comprobar():
+	id = 1
 	for (result, date, error) in comprobar():
 		if error:
-			output(color_text('red', f'{date_string(date)}: {result:.2f}\n'))
+			output(color_text('red', f'{id} - {date_string(date)}: {result:.2f}\n'))
 		else:
-			output(f'{date_string(date)}: {result:.2f}\n')
+			output(f'{id} - {date_string(date)}: {result:.2f}\n')
+		id += 1
 
 def show_list_games():
 	id = 1
@@ -306,7 +307,6 @@ def show_igualar():
 	game = igualar()
 	output('------------------------\n')
 	output('    Partida igualada\n')
-	output('------------------------\n')
 	show_game(game)
 
 
