@@ -21,24 +21,26 @@ def parse_arguments():
 	parser.add_argument('-lg', '--game', help='show one game by id')
 	parser.add_argument('-r', '--resolve', nargs='+', help='resolver tricount')
 	parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
+	parser.add_argument('-i', '--igualar', help='ajustar el resultado de una partida para que la suma sea 0')
+
 	return parser.parse_args()
 
 # Definicion de objetos
 
-class player:
+class Player:
 	def __init__(self, name, cuantity, money = None):
 		self.name = name
 		self.cuantity_gained = cuantity
 		self.money_gained = money
 		self.complete = money is not None
 
-class header:
+class Header:
 	def __init__(self, date, cuantity, buyin):
 		self.date = date
 		self.cuantity = cuantity
 		self.buyin = buyin
 
-class game:
+class Game:
 	def __init__(self, header, players, complete = True):
 		self.date = header.date
 		self.cuantity = header.cuantity
@@ -66,7 +68,7 @@ def check_line(line):
 				incomplete = False
 				games.append(create_incomplete_game(header_tmp, players))
 			else:
-				games.append(create_game(header_tmp, players))
+				games.append(create_Game(header_tmp, players))
 			players = []
 			header_tmp = None
 	if header_result:
@@ -79,7 +81,7 @@ def check_line(line):
 		incomplete = True
 		players.append(create_incomplete_player(incomplete_player_result))
 
-def add_last_game():
+def add_last_Game():
 	global inside_block
 	global incomplete
 	inside_block = False
@@ -87,35 +89,35 @@ def add_last_game():
 		incomplete = False
 		games.append(create_incomplete_game(header_tmp, players))
 	else:
-		games.append(create_game(header_tmp, players))
+		games.append(create_Game(header_tmp, players))
 	
 def create_header(header_result):
 	groups = header_result.groups()
 	date = daydate(int('20' + groups[2]),int(groups[1]),int(groups[0])) # 20 is to create 2023, 2024 (groups[2] is the year)
 	cuantity = float(groups[4])
 	buyin = float(groups[5])
-	return header(date, cuantity, buyin)
+	return Header(date, cuantity, buyin)
 
 def create_player(player_result):
 	groups = player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
 	money = float(groups[2])
-	return player(name, cuantity, money)
+	return Player(name, cuantity, money)
 
 def create_incomplete_player(incomplete_player_result):
 	groups = incomplete_player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
-	return player(name, cuantity)
+	return Player(name, cuantity)
 
-def create_game(header, players):
-	return game(header, players)
+def create_Game(header, players):
+	return Game(header, players)
 
 def create_incomplete_game(header, players):
-	return game(header, players, False)
+	return Game(header, players, False)
 
-def complete_game(game):
+def complete_Game(game):
 	for player in game.players:
 		player.money_gained = player.cuantity_gained / game.cuantity * game.buyin
 		player.complete = True
@@ -131,7 +133,7 @@ def total_benefit(game_list):
 				players_total[player.name] += player.money_gained
 			else:
 				players_total[player.name] = player.money_gained
-	return players_total
+	return players_total # diccionario formado por parejas {nombre, ganancia en euros}
 
 def player_benefit_history():
 	history = []
@@ -208,9 +210,38 @@ def resolve():
 	for id in args.resolve:
 		game_list.append(games[int(id) - 1]) # lista de partidas pedidas como argumento
 	players_total = total_benefit(game_list) # dict con nombre y cantidad ganada en dinero
-	player_list = [player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
+	player_list = [Player(name, 0, money) for (name, money) in players_total.items()] # lista de players con nombre y money_gained
 	result_list = count_resolve(player_list) # lista de tuplas (nombre, valor) con lo que ha ganado o perdido separado por tuplas (None, None)
 	return result_list
+
+def igualar():
+	new_players = []
+	total_game_benefit = 0
+	game = games[int(args.igualar) - 1]
+	print((game.players)[0].money_gained)
+	benefit_dict = total_benefit([game]) # dict con jugadores y ganancias
+	result = comprobar_partida(game)[0] # diferencia de dinero
+	if result > 0:
+		player_diff_list = [(name, value) for (name, value) in benefit_dict.items() if float(value) > 0]
+	elif result < 0:
+		player_diff_list = [(name, value) for (name, value) in benefit_dict.items() if float(value) < 0]
+	else:
+		return
+	for player_diff in player_diff_list: # calculamos el beneficio total que ha habido en la partida
+		total_game_benefit += player_diff[1]
+	for player_diff in player_diff_list: # añadimos a los jugadores que tienen que cambiar el beneficio
+		calculo = player_diff[1] - result*player_diff[1]/total_game_benefit
+		new_players.append(Player(player_diff[0], int(calculo*game.cuantity/game.buyin), calculo))
+	for player in game.players: # añadimos a los jugadores que faltan
+		if result > 0 and player.money_gained < 0:
+			new_players.append(player)
+		if result < 0 and player.money_gained >= 0:
+			new_players.append(player)
+	new_header = Header(game.date, game.cuantity, game.buyin)
+	new_game = Game(new_header, new_players)
+	return new_game
+
+
 
 # Metodos de vista
 
@@ -250,7 +281,7 @@ def show_comprobar():
 		if error:
 			output(color_text('red', f'{date_string(date)}: {result:.2f}\n'))
 		else:
-			output(f'{date}: {result:.2f}\n')
+			output(f'{date_string(date)}: {result:.2f}\n')
 
 def show_list_games():
 	id = 1
@@ -258,34 +289,45 @@ def show_list_games():
 		output(f'{id}: {date_string(game.date)}\n')
 		id += 1
 
-def show_game():
-	game = games[int(args.game) - 1]
+def show_game(game):
+	buyin = str(int(game.buyin)) if int(game.buyin) == game.buyin else f'{game.buyin:.2f}'
 	output('------------------------\n')
-	output(f'-- Partida {int(args.game)} --\n')
-	output(f'{date_string(game.date)} {str(int(game.cuantity))}: {str(float(game.buyin))}€\n')
+	output(f' -- Partida {date_string(game.date)} --\n')
 	output('------------------------\n')
+	output(f'{date_string(game.date)} {str(int(game.cuantity))}: {buyin}€\n')
 	for player in game.players:
 		output(f'{player.name} {number_string(player.cuantity_gained)} = {number_string(player.money_gained)}€\n')
 	output('------------------------\n')
 
+def show_game_command():
+	show_game(games[int(args.game) - 1])
+
+def show_igualar():
+	game = igualar()
+	output('------------------------\n')
+	output('    Partida igualada\n')
+	output('------------------------\n')
+	show_game(game)
+
+
 def show_resolve():
 	result_list = resolve()
-	output('------------------------\n')
+	output('--------------------\n')
 	output('-- Pagos Tricount --\n')
-	output('------------------------\n')
+	output('--------------------\n')
 	for (name, value) in result_list:
 		if name is not None:
 			output(f'{name} {number_string(value)}\n')
 		else:
-			output('------------------------\n')
+			output('--------------------\n')
 
 def number_string(number):
-	plus = '+' if number > 0 else ''
+	plus = '+' if number >= 0 else ''
 	noplus = str(int(number)) if int(number) == number else f'{number:.2f}'
 	return plus + noplus
 
 def date_string(date):
-	return str(date.strftime('%d/%m/%Y'))
+	return str(date.strftime('%d/%m/%y'))
 
 def color_text(color, text):
 	if color == "red":
@@ -330,11 +372,11 @@ if args.check_format:
 with open(args.file, 'r') as file:
 	for line in file:
 		check_line(line.strip())
-	add_last_game()
+	add_last_Game()
 
 for game in games:
 	if not game.complete:
-		complete_game(game)
+		complete_Game(game)
 
 if args.total:
 	show_total_benefit()
@@ -349,9 +391,11 @@ if args.comprobar:
 if args.list:
 	show_list_games()
 if args.game:
-	show_game()
+	show_game_command()
 if args.resolve:
 	show_resolve()
+if args.igualar:
+	show_igualar()
 
 if args.output:
 	output_file.close()
