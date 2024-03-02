@@ -1,9 +1,7 @@
 import re
 import argparse
-import comprobar_formato
 from datetime import date as daydate
 from matplotlib import pyplot as plt
-
 
 # Argumentos
 
@@ -22,7 +20,6 @@ def parse_arguments():
 	parser.add_argument('-r', '--resolve', nargs='+', help='resolver tricount')
 	parser.add_argument('-cf', '--check_format', help='comprobar el formato', action='store_true')
 	parser.add_argument('-i', '--igualar', help='ajustar el resultado de una partida para que la suma sea 0')
-
 	return parser.parse_args()
 
 # Definicion de objetos
@@ -56,21 +53,20 @@ def check_line(line):
 	global players
 	global games
 	global incomplete
-	header_result = re.search(header_regex, line)
-	player_result = re.search(player_regex, line)
-	incomplete_player_result = re.search(incomplete_player_regex, line)
-	if line == '':
-		if not inside_block:
-			return
-		else:	
+	if not line:
+		if inside_block:
 			inside_block = False
 			if incomplete:
 				incomplete = False
 				games.append(create_incomplete_game(header_tmp, players))
 			else:
-				games.append(create_Game(header_tmp, players))
+				games.append(create_game(header_tmp, players))
 			players = []
 			header_tmp = None
+		return
+	header_result = re.search(header_regex, line)
+	player_result = re.search(player_regex, line)
+	incomplete_player_result = re.search(incomplete_player_regex, line)
 	if header_result:
 		header_tmp = create_header(header_result)
 	if player_result:
@@ -81,15 +77,16 @@ def check_line(line):
 		incomplete = True
 		players.append(create_incomplete_player(incomplete_player_result))
 
-def add_last_Game():
+def add_last_game():
 	global inside_block
 	global incomplete
-	inside_block = False
-	if incomplete:
-		incomplete = False
-		games.append(create_incomplete_game(header_tmp, players))
-	else:
-		games.append(create_Game(header_tmp, players))
+	if inside_block:
+		inside_block = False
+		if incomplete:
+			incomplete = False
+			games.append(create_incomplete_game(header_tmp, players))
+		else:
+			games.append(create_game(header_tmp, players))
 	
 def create_header(header_result):
 	groups = header_result.groups()
@@ -111,13 +108,13 @@ def create_incomplete_player(incomplete_player_result):
 	cuantity = float(groups[1])
 	return Player(name, cuantity)
 
-def create_Game(header, players):
+def create_game(header, players):
 	return Game(header, players)
 
 def create_incomplete_game(header, players):
 	return Game(header, players, False)
 
-def complete_Game(game):
+def complete_game(game):
 	for player in game.players:
 		player.money_gained = player.cuantity_gained / game.cuantity * game.buyin
 		player.complete = True
@@ -340,6 +337,12 @@ def output(message):
 	else:
 		print(message, end='')
 
+def try_check_line(line, line_num = 0):
+	try:
+		check_line(line.strip())
+	except Exception as e:
+			print(f"Error de lectura en línea {line_num}, abortando.")
+
 # Definicion de expresiones regulares
 
 header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(-torneo-)?\s*(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
@@ -356,46 +359,53 @@ inside_block = False
 header_tmp = None
 players = []
 games = []
+args = []
 
 lista_pumas = ['adolfo', 'marco', 'nico', 'mario']
 
-args = parse_arguments()
+# Main
 
-# Lectura del archivo
+def main():
+	global args
 
-if args.output:
-	output_file = open(args.output, 'w')
+	args = parse_arguments()
 
-if args.check_format:
-	comprobar_formato.format_checker(args.file)
+	if args.output:
+		output_file = open(args.output, 'w')
 
-with open(args.file, 'r') as file:
-	for line in file:
-		check_line(line.strip())
-	add_last_Game()
+	if args.check_format:
+		comprobar_formato.format_checker(args.file)
 
-for game in games:
-	if not game.complete:
-		complete_Game(game)
+	with open(args.file, 'r') as file:
+		for line_num, line in enumerate(file, 1):
+			try_check_line(line, line_num)
+		add_last_game()
 
-if args.total:
-	show_total_benefit()
-if args.jugador:
-	show_jugador_benefit()
-if args.grafico:
-	show_player_benefit_history()
-if args.graficototal:
-	show_player_total_benefit_history()
-if args.comprobar:
-	show_comprobar()
-if args.list:
-	show_list_games()
-if args.game:
-	show_game_command()
-if args.resolve:
-	show_resolve()
-if args.igualar:
-	show_igualar()
+	for game in games:
+		if not game.complete:
+			complete_game(game)
 
-if args.output:
-	output_file.close()
+	if args.total:
+		show_total_benefit()
+	if args.jugador:
+		show_jugador_benefit()
+	if args.grafico:
+		show_player_benefit_history()
+	if args.graficototal:
+		show_player_total_benefit_history()
+	if args.comprobar:
+		show_comprobar()
+	if args.list:
+		show_list_games()
+	if args.game:
+		show_game_command()
+	if args.resolve:
+		show_resolve()
+	if args.igualar:
+		show_igualar()
+
+	if args.output:
+		output_file.close()
+
+if __name__ == "__main__":
+	main()
