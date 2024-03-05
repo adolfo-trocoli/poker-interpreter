@@ -74,11 +74,9 @@ def add_last_game():
 	global incomplete
 	if inside_block:
 		inside_block = False
+		games.append(create_game(header_tmp, players, not incomplete))
 		if incomplete:
 			incomplete = False
-			games.append(create_game(header_tmp, players, False))
-		else:
-			games.append(create_game(header_tmp, players, True))
 	
 def create_header(header_result):
 	groups = header_result.groups()
@@ -92,7 +90,7 @@ def create_player(player_result):
 	groups = player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
-	if len(groups) > 2:
+	if len(groups) > 2: # si hay atributo money lo meto, si no no 
 		money = float(groups[2])
 		return Player(name, cuantity, money)
 	else:
@@ -225,8 +223,6 @@ def igualar():
 	new_game = Game(new_header, new_players)
 	return new_game
 
-
-
 # Metodos de vista
 
 def show_total_benefit():
@@ -335,21 +331,17 @@ def try_check_line(line, line_num = 0):
 # Definicion de expresiones regulares
 
 header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(-torneo-)?\s*(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
-#player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+?(.\d+)?)\s*€?\s*')
-
 player_regex = re.compile(r'(\w+)\s+([+-]?\d+).*$')
 
 # Definicion de variables
 
 file_output = False
-
 incomplete = False
 inside_block = False
 header_tmp = None
 players = []
 games = []
 args = []
-
 lista_pumas = ['adolfo', 'marco', 'nico', 'mario']
 
 # Main
