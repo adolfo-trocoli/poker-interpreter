@@ -53,29 +53,21 @@ def check_line(line):
 	global players
 	global games
 	global incomplete
-	if not line:
-		if inside_block:
-			inside_block = False
-			if incomplete:
-				incomplete = False
-				games.append(create_game(header_tmp, players, False))
-			else:
-				games.append(create_game(header_tmp, players, True))
-			players = []
-			header_tmp = None
+	if inside_block and not line:
+		inside_block = False
+		games.append(create_game(header_tmp, players, not incomplete))
+		players = []
+		header_tmp = None
+		if incomplete:
+			incomplete = False
 		return
 	header_result = re.search(header_regex, line)
 	player_result = re.search(player_regex, line)
-	incomplete_player_result = re.search(incomplete_player_regex, line)
 	if header_result:
 		header_tmp = create_header(header_result)
-	if player_result:
+	elif player_result:
 		inside_block = True
 		players.append(create_player(player_result))
-	if incomplete_player_result:
-		inside_block = True
-		incomplete = True
-		players.append(create_incomplete_player(incomplete_player_result))
 
 def add_last_game():
 	global inside_block
@@ -96,20 +88,19 @@ def create_header(header_result):
 	return Header(date, cuantity, buyin)
 
 def create_player(player_result):
+	global incomplete
 	groups = player_result.groups()
 	name = groups[0].lower()
 	cuantity = float(groups[1])
-	money = float(groups[2])
-	return Player(name, cuantity, money)
+	if len(groups) > 2:
+		money = float(groups[2])
+		return Player(name, cuantity, money)
+	else:
+		incomplete = True
+		return Player(name, cuantity)
 
-def create_incomplete_player(incomplete_player_result):
-	groups = incomplete_player_result.groups()
-	name = groups[0].lower()
-	cuantity = float(groups[1])
-	return Player(name, cuantity)
-
-def create_game(header, players, incomplete):
-	return Game(header, players, incomplete)
+def create_game(header, players, complete):
+	return Game(header, players, complete)
 
 def complete_game(game):
 	for player in game.players:
@@ -344,9 +335,9 @@ def try_check_line(line, line_num = 0):
 # Definicion de expresiones regulares
 
 header_regex = re.compile(r'(\d{1,2})\/(\d{1,2})\/(\d{1,2})\s+(-torneo-)?\s*(\d{2,3})\s*:\s+(\d{1,2}(.\d+)?)\s*€?\s*')
-player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+(.\d+)?)\s*€?\s*')
+#player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=\s*([+-]?\d+?(.\d+)?)\s*€?\s*')
 
-incomplete_player_regex = re.compile(r'(\w+)\s+([+-]?\d+)\s*=?\s*[+-]?\s*$')
+player_regex = re.compile(r'(\w+)\s+([+-]?\d+).*$')
 
 # Definicion de variables
 
