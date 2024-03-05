@@ -58,9 +58,9 @@ def check_line(line):
 			inside_block = False
 			if incomplete:
 				incomplete = False
-				games.append(create_incomplete_game(header_tmp, players))
+				games.append(create_incomplete_game(header_tmp, players, False))
 			else:
-				games.append(create_game(header_tmp, players))
+				games.append(create_game(header_tmp, players, True))
 			players = []
 			header_tmp = None
 		return
@@ -84,9 +84,9 @@ def add_last_game():
 		inside_block = False
 		if incomplete:
 			incomplete = False
-			games.append(create_incomplete_game(header_tmp, players))
+			games.append(create_game(header_tmp, players, False))
 		else:
-			games.append(create_game(header_tmp, players))
+			games.append(create_game(header_tmp, players, True))
 	
 def create_header(header_result):
 	groups = header_result.groups()
@@ -108,11 +108,8 @@ def create_incomplete_player(incomplete_player_result):
 	cuantity = float(groups[1])
 	return Player(name, cuantity)
 
-def create_game(header, players):
-	return Game(header, players)
-
-def create_incomplete_game(header, players):
-	return Game(header, players, False)
+def create_game(header, players, incomplete):
+	return Game(header, players, incomplete)
 
 def complete_game(game):
 	for player in game.players:
