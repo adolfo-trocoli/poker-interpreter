@@ -58,7 +58,7 @@ def check_line(line):
 			inside_block = False
 			if incomplete:
 				incomplete = False
-				games.append(create_incomplete_game(header_tmp, players, False))
+				games.append(create_game(header_tmp, players, False))
 			else:
 				games.append(create_game(header_tmp, players, True))
 			players = []
@@ -339,6 +339,7 @@ def try_check_line(line, line_num = 0):
 		check_line(line.strip())
 	except Exception as e:
 			print(f"Error de lectura en línea {line_num}, abortando.")
+			print(e)
 
 # Definicion de expresiones regulares
 
